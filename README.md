@@ -13,7 +13,7 @@ There are two options for running this API: either using docker, or traditional 
 Docker will be handy for just running the API as is, but unit tests will need venv/coda-env
 #### Docker ####
 A Dockerfile is provided with this repo. To use the API:
-1. Create docker image `docker build --tag hector_api`
+1. Create docker image `docker build --tag hector_api .` (note the vital full stop at the end of this command)
 2. Run the image in detached mode with port forwarding `docker run -d -p 5000:5000 hector_api`
 3. Navigate to [0.0.0.0:5000]() to interact with the API in your browser
 
