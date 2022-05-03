@@ -4,6 +4,7 @@ from utils import sum_groupby_results_across_years, totals_to_percentages, clean
 from sql_utils import create_sqlite_database, query_db_with_args, get_co2_by_ship_type, count_ship_types
 from typing import Union
 import os
+import copy
 app = Flask(__name__)
 
 
@@ -113,8 +114,8 @@ def total_co2_emissions() -> Union[Response, str]:
         ship_type_counts[year_keys[0]+'-'+year_keys[-1]] = sum_groupby_results_across_years(ship_type_counts)
 
     # Normalise data to show % of total in a given time period per ship
-    proportion_co2_by_ship_type = totals_to_percentages(co2_by_ship_type)
-    proportion_ship_type_counts = totals_to_percentages(ship_type_counts)
+    proportion_co2_by_ship_type = totals_to_percentages(copy.deepcopy(co2_by_ship_type))
+    proportion_ship_type_counts = totals_to_percentages(copy.deepcopy(ship_type_counts))
 
     # TODO: I wanted a plot of these but ran out of time (flask/matplotlib interaction is new to me and quite fiddly)
     # Group results per year
