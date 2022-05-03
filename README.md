@@ -6,7 +6,7 @@ This is the repository for my Flask API accessing EU MRV data (https://mrv.emsa.
 ### Downloading datasets ###
 Download [EU MRV datasets](https://mrv.emsa.europa.eu/#public/emission-report) for 2018, 2019, and 2020 to the directory _api_hector/data_
 
-The first time the API runs, it will create a SQLite database _mrv_emissions.db_ - this can take a few seconds, but only needs to happen once as subsequent API calls use this database.
+The first time the API runs, it will create a SQLite database _mrv_emissions.db_ - this can take a few minutes, but only needs to happen once as subsequent API calls use this database.
 
 ### Dependencies ###
 There are two options for running this API: either using docker, or traditional venv/conda-env.
