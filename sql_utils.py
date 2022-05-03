@@ -12,6 +12,12 @@ def create_sqlite_database(years_data: Dict[str, pd.DataFrame], db_name: str = '
     # Create a table per year and add to the db
     for year, year_df in years_data.items():
         cols = original_dataset_fields()
+
+        # Handling 2020 column naming differences (some names changed vs 2018 and 2019)
+        if year == '2020':
+            year_df = year_df.rename(columns={'Annual Time spent at sea [hours]': 'Annual Total time spent at sea [hours]',
+                                              'Time spent at sea [hours]': 'Total time spent at sea [hours]'})
+        
         year_string = 'ships_'+str(year)
         create_table_syntax = f'CREATE TABLE {year_string}("{cols[0]}" PRIMARY KEY, "{cols[1]}", "{cols[2]}", "{cols[3]}",' \
                               f' "{cols[4]}", "{cols[5]}", "{cols[6]}", "{cols[7]}", "{cols[8]}", "{cols[9]}", "{cols[10]}",' \
