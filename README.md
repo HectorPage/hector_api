@@ -9,7 +9,7 @@ Download [EU MRV datasets](https://mrv.emsa.europa.eu/#public/emission-report) f
 The first time the API runs, it will create a SQLite database _mrv_emissions.db_ - this can take a few seconds, but only needs to happen once as subsequent API calls use this database.
 
 ### Dependencies ###
-There are two options for running this API - using docker, or traditional venv/conda-env.
+There are two options for running this API: either using docker, or traditional venv/conda-env.
 Docker will be handy for just running the API as is, but unit tests will need venv/coda-env
 #### Docker ####
 A Dockerfile is provided with this repo. To use the API:
@@ -20,7 +20,8 @@ A Dockerfile is provided with this repo. To use the API:
 #### Traditional ####
 Both a _requirements.txt_ (venv or conda-env) and an _ENV.yml_ (conda-env) are provided. To use the API:
 1. Create an environment using _requirements.txt_ or _ENV.yml_
-2. Within api_hector directory, `flask run` - this will start the flask API via the _.flaskenv_ file.
+2. Activate your environment
+3. Within api_hector directory, `flask run`. This will start the flask API via the _.flaskenv_ file.
 
 ## Using this API ##
 This API provides two endpoints, which can be accessed via your browser.
