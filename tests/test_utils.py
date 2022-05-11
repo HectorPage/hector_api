@@ -5,6 +5,8 @@ from utils import sum_groupby_results_across_years, totals_to_percentages
 
 sys.path.append('../')
 
+# TODO: convert to pytest
+
 
 class TestUtils(unittest.TestCase):
     @classmethod

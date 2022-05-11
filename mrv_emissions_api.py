@@ -1,14 +1,23 @@
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify, Response, render_template
 from pandas_utils import read_given_years_to_df
 from utils import sum_groupby_results_across_years, totals_to_percentages, clean_response
 from sql_utils import create_sqlite_database, query_db_with_args, get_co2_by_ship_type, count_ship_types
 from typing import Union
 import os
 import copy
+import json
+import plotly
+import plotly.express as px
+import math
+
 app = Flask(__name__)
 
 
 # TODO: Pull the data from website directly?
+# TODO: Use SQLAlchemy ORM for database management, access, etc.
+# TODO: Put all years into the same table within the database
+# TODO: Use pandas instead of dicts where possible
+
 # Do some setup if a database isn't already set up
 if not os.path.exists('mrv_emissions.db'):
     print('...Loading MRV data into mrv_emissions.db...')
@@ -117,7 +126,7 @@ def total_co2_emissions() -> Union[Response, str]:
     proportion_co2_by_ship_type = totals_to_percentages(copy.deepcopy(co2_by_ship_type))
     proportion_ship_type_counts = totals_to_percentages(copy.deepcopy(ship_type_counts))
 
-    # TODO: I wanted a plot of these but ran out of time (flask/matplotlib interaction is new to me and quite fiddly)
+    # TODO: Put these data into a dataframe instead of a dict
     # Group results per year
     co2_and_count_per_ship_type = {year_key: {'co2 emissions': {'value': co2_by_ship_type[year_key],
                                                                 'proportion': proportion_co2_by_ship_type[year_key]},
@@ -125,7 +134,58 @@ def total_co2_emissions() -> Union[Response, str]:
                                                                   'proportion': proportion_ship_type_counts[year_key]}}
                                    for year_key in co2_by_ship_type.keys()}
 
-    return jsonify(co2_and_count_per_ship_type)
+    # TODO: handle multiple years worth of plots
+    # TODO: create a navigation page like this:
+    #  https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
+    # Create plot
+    # TODO: make this plotting a separate function
+    ship_proportion_data = [proportion_ship_type_counts['2018'][key]
+                            for key in proportion_ship_type_counts['2018'].keys()]
+    emission_proportion_data = [proportion_co2_by_ship_type['2018'][key]
+                                for key in proportion_ship_type_counts['2018'].keys()]
+    names = list(proportion_ship_type_counts['2018'].keys())
+    fig = px.scatter(x=ship_proportion_data,
+                     y=emission_proportion_data,
+                     color=names,
+                     labels={
+                         "x": "Proportion of ships",
+                         "y": "Proportion of CO₂ emissions",
+                         "color": "Ship Type"
+                     }
+                     )
+    fig.update_traces(mode="markers")
+    # Set axis limits
+    max_x = max(ship_proportion_data)
+    max_y = max(emission_proportion_data)
+
+    # TODO: add in a separate util
+    def round_up(n, decimals=0):
+        multiplier = 10 ** decimals
+        return math.ceil(n * multiplier) / multiplier
+
+    overall_max = round_up(max([max_x, max_y]), 2)
+    fig.update_layout(xaxis=dict(range=[0, overall_max]))
+    fig.update_layout(yaxis=dict(range=[0, overall_max]))
+    fig.add_shape(type="line",
+                  x0=0,
+                  y0=0,
+                  x1=overall_max,
+                  y1=overall_max,
+                  layer='below',
+                  opacity=0.5)
+
+    # Export plot
+    header = "Proportion of CO₂ emissions vs. proportion of total ships"
+    description = """
+       This figure compares the proportion of total CO₂ emissions and total ships for each ship type. This helps
+       to identify emissions-heavy ship types and prioritise actions to reduce emissions.
+       """
+
+    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+    return render_template('plots.html', graphJSON=graphJSON, header=header, description=description)
+
+    # return jsonify(co2_and_count_per_ship_type)
 
 
 if __name__ == '__main__':

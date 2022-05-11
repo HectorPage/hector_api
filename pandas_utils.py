@@ -49,6 +49,9 @@ def read_xlsx_to_df(filename: str) -> pd.DataFrame:
     Reads xlsx file to pandas dataframe.
     Note: Assumes data is in the first/only sheet
     """
+
+    # TODO: this loading is too slow - look into a bytes method to do this
+    # TODO: add in some data munging/cleaning where possible
     # Loading a workbook whilst suppressing openpyxl warnings
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")

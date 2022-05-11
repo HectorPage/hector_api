@@ -7,6 +7,8 @@ from sql_utils import get_co2_by_ship_type, count_ship_types, query_db_with_args
 
 sys.path.append('../')
 
+# TODO: convert to pytest
+
 
 class TestSqlUtils(unittest.TestCase):
 
