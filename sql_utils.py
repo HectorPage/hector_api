@@ -4,36 +4,36 @@ import sqlite3
 from utils import original_dataset_fields
 
 
-def create_sqlite_database(years_data: Dict[str, pd.DataFrame], db_name: str = 'mrv_emissions.db') -> None:
-    """"Create SQLite database loaded with MRV data (one table per year)"""
+def create_sqlite_database(years_data: Dict[str, pd.DataFrame]) -> None:
+    """"Create SQLite database loaded with MRV emissions data"""
+    db_name = 'mrv_emissions.db'
     conn = sqlite3.connect(db_name)
     c = conn.cursor()
 
-    # Create a table per year and add to the db
-    for year, year_df in years_data.items():
-        cols = original_dataset_fields()
+    # Add the table
+    cols = original_dataset_fields()
+    create_table_syntax = f'CREATE TABLE ships("{cols[0]}" PRIMARY KEY, "{cols[1]}", "{cols[2]}", "{cols[3]}",' \
+                          f' "{cols[4]}", "{cols[5]}", "{cols[6]}", "{cols[7]}", "{cols[8]}", "{cols[9]}", "{cols[10]}",' \
+                          f' "{cols[11]}", "{cols[12]}","{cols[13]}", "{cols[14]}", "{cols[15]}", "{cols[16]}",' \
+                          f' "{cols[17]}", "{cols[18]}", "{cols[19]}", "{cols[20]}", "{cols[21]}", "{cols[22]}",' \
+                          f' "{cols[23]}", "{cols[24]}", "{cols[25]}", "{cols[26]}", "{cols[27]}", "{cols[28]}",' \
+                          f' "{cols[29]}", "{cols[30]}", "{cols[31]}", "{cols[32]}", "{cols[33]}", "{cols[34]}",' \
+                          f' "{cols[35]}", "{cols[36]}", "{cols[37]}", "{cols[38]}", "{cols[39]}", "{cols[40]}",' \
+                          f' "{cols[41]}", "{cols[42]}", "{cols[43]}", "{cols[44]}", "{cols[45]}", "{cols[46]}",' \
+                          f' "{cols[47]}", "{cols[48]}", "{cols[49]}", "{cols[50]}", "{cols[51]}", "{cols[52]}",' \
+                          f' "{cols[53]}", "{cols[54]}", "{cols[55]}", "{cols[56]}", "{cols[57]}", "{cols[58]}",' \
+                          f' "{cols[59]}", "{cols[60]}")'
 
+    c.execute(create_table_syntax)
+    conn.commit()
+
+    # Go through each year and add/append to the ships table
+    for year, year_df in years_data.items():
         # Handling 2020 column naming differences (some names changed vs 2018 and 2019)
         if year == '2020':
             year_df = year_df.rename(columns={'Annual Time spent at sea [hours]': 'Annual Total time spent at sea [hours]',
                                               'Time spent at sea [hours]': 'Total time spent at sea [hours]'})
-        
-        year_string = 'ships_'+str(year)
-        create_table_syntax = f'CREATE TABLE {year_string}("{cols[0]}" PRIMARY KEY, "{cols[1]}", "{cols[2]}", "{cols[3]}",' \
-                              f' "{cols[4]}", "{cols[5]}", "{cols[6]}", "{cols[7]}", "{cols[8]}", "{cols[9]}", "{cols[10]}",' \
-                              f' "{cols[11]}", "{cols[12]}","{cols[13]}", "{cols[14]}", "{cols[15]}", "{cols[16]}",' \
-                              f' "{cols[17]}", "{cols[18]}", "{cols[19]}", "{cols[20]}", "{cols[21]}", "{cols[22]}",' \
-                              f' "{cols[23]}", "{cols[24]}", "{cols[25]}", "{cols[26]}", "{cols[27]}", "{cols[28]}",' \
-                              f' "{cols[29]}", "{cols[30]}", "{cols[31]}", "{cols[32]}", "{cols[33]}", "{cols[34]}",' \
-                              f' "{cols[35]}", "{cols[36]}", "{cols[37]}", "{cols[38]}", "{cols[39]}", "{cols[40]}",' \
-                              f' "{cols[41]}", "{cols[42]}", "{cols[43]}", "{cols[44]}", "{cols[45]}", "{cols[46]}",' \
-                              f' "{cols[47]}", "{cols[48]}", "{cols[49]}", "{cols[50]}", "{cols[51]}", "{cols[52]}",' \
-                              f' "{cols[53]}", "{cols[54]}", "{cols[55]}", "{cols[56]}", "{cols[57]}", "{cols[58]}",' \
-                              f' "{cols[59]}", "{cols[60]}")'
-
-        c.execute(create_table_syntax)
-        conn.commit()
-        year_df.to_sql(name=year_string, con=conn, if_exists='append', index=False)
+        year_df.to_sql(name='ships', con=conn, if_exists='append', index=False)
     conn.close()
 
 
