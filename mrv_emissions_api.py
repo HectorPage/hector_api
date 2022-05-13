@@ -52,7 +52,7 @@ def fetch_ships() -> Union[Response, str]:
 
      NOTE: Ships can share a name, so only IMOs uniquely identify a vessel.
      """
-
+    # TODO: have user input params on page instead of navigating via url?
     # Some simple error handling
     invalid_args = []
     for arg in request.args:
@@ -60,6 +60,7 @@ def fetch_ships() -> Union[Response, str]:
             invalid_args.append(arg)
     if len(invalid_args) > 0:
         return f"Invalid arg(s) {invalid_args}.\nMust be one of [name, imo, year]"
+    # TODO: return a proper error to be displayed in browser
 
     # Parse arguments
     if 'name' in request.args:  # TODO: what about multiple names/IMOs?
@@ -75,7 +76,7 @@ def fetch_ships() -> Union[Response, str]:
     if 'year' in request.args:
         years = [request.args['year']]  # TODO: what about querying a pair of years?
     else:
-        years = ['2018', '2019', '2020']  # Default to all years
+        years = None
 
     # Filter data based on ship name/IMO and years
     filtered_data = query_db_with_args(ship_name, ship_imo, years)

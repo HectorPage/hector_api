@@ -39,13 +39,15 @@ def create_sqlite_database(years_data: Dict[str, pd.DataFrame]) -> None:
 
 # TODO: could be a more informative name here - if we have other functions this might not be the only query type
 def query_db_with_args(ship_name: Union[str, None], ship_imo: Union[str, None],
-                       years: List[str], db_name: str = 'mrv_emissions.db') -> Dict:
+                       years: List[str, None], db_name: str = 'mrv_emissions.db') -> Dict:
     """Queries database for ship data that matches the filter arguments for name/imo/year"""
     result = {}
     conn = sqlite3.connect(db_name)
     cur = conn.cursor()
     # TODO: error handling if wrong database specified etc.
 
+    # TODO: refactor this to query from single table - currently broken with new table setup
+    # TODO: select year by 'Reporting Period' field in the table
     # Handling different combinations of ship name and ship IMO
     if ship_name is not None and ship_imo is not None:
         for year in years:
