@@ -27,6 +27,8 @@ if not os.path.exists('mrv_emissions.db'):
 
     # Set up a sqlite database to demonstrate sql querying
     create_sqlite_database(ALL_YEARS_DATA)
+else:
+    print("Using existing mrv_emissions.db")
 
 
 @app.route('/', methods=['GET'])
