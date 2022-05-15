@@ -84,6 +84,7 @@ def fetch_ships() -> Union[Response, str]:
 
     # Clean  up the response by adding in field names and grouping them
     if len(filtered_data) > 0:  # Invalid name/imo combinations return empty dataframe
+        # TODO: need to correct how the data is being cleaned
         filtered_data = clean_response(filtered_data)
 
     return jsonify(filtered_data)
