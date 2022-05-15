@@ -39,7 +39,7 @@ def create_sqlite_database(years_data: Dict[str, pd.DataFrame]) -> None:
 
 # TODO: could be a more informative name here - if we have other functions this might not be the only query type
 def query_db_with_args(ship_name: Union[str, None], ship_imo: Union[str, None],
-                       year: Union[str, None], db_name: str = 'mrv_emissions.db') -> List:
+                       year: Union[str, None], db_name: str = 'mrv_emissions.db') -> pd.DataFrame:
     """Queries database for ship data that matches the filter arguments for name/imo/year"""
     conn = sqlite3.connect(db_name)
     cur = conn.cursor()
@@ -49,61 +49,79 @@ def query_db_with_args(ship_name: Union[str, None], ship_imo: Union[str, None],
     if ship_name is not None and ship_imo is not None:
         if year is not None:
             query_string = f"SELECT * FROM ships WHERE Name=? AND [IMO Number]=? AND [Reporting Period]=?;"
-            response = cur.execute(query_string, (ship_name, ship_imo, year)).fetchall()
+            params = (ship_name, ship_imo, year)
 
         else:
             query_string = f"SELECT * FROM ships WHERE Name=? AND [IMO Number]=?;"
-            response = cur.execute(query_string, (ship_name, ship_imo)).fetchall()
+            params = (ship_name, ship_imo)
 
     elif ship_name is not None:
         if year is not None:
             query_string = f"SELECT * FROM ships WHERE Name=? AND [Reporting Period]=?;"
-            response = cur.execute(query_string, (ship_name, year)).fetchall()
+            params = (ship_name, year)
         else:
             query_string = f"SELECT * FROM ships WHERE Name=?;"
-            response = cur.execute(query_string, (ship_name, year)).fetchall()
+            params = (ship_name,)
 
     elif ship_imo is not None:
         if year is not None:
             query_string = f"SELECT * FROM ships WHERE [IMO Number]=? AND [Reporting Period]=?;"
-            response = cur.execute(query_string, (ship_imo, year)).fetchall()
+            params = (ship_imo, year)
         else:
             query_string = f"SELECT * FROM ships WHERE [IMO Number]=?;"
-            response = cur.execute(query_string, (ship_imo,)).fetchall()
+            params = (ship_imo,)
     else:
-        query_string = f"SELECT * FROM ships;"
-        response = cur.execute(query_string).fetchall()
+        if year is not None:
+            query_string = f"SELECT * FROM ships WHERE [Reporting Period]=?;"
+            params = (year,)
+        else:
+            query_string = f"SELECT * FROM ships;"
+            params = None
 
+    response = pd.read_sql_query(sql=query_string, con=conn, params=params)
     conn.close()
 
     return response
 
 
-def get_co2_by_ship_type(year: str, db_name: str = 'mrv_emissions.db') -> Dict:
+def get_co2_by_ship_type(year: Union[str, None], db_name: str = 'mrv_emissions.db') -> Dict:
     """Queries database for total CO2 emissions grouped by ship type"""
     conn = sqlite3.connect(db_name)
     cur = conn.cursor()
 
-    year_string = 'ships_'+year
-    query_string = f'SELECT SUM("Total CO₂ emissions [m tonnes]"), "Ship type" FROM {year_string}' \
-                   f' GROUP BY "Ship type" ORDER BY SUM("Total CO₂ emissions [m tonnes]");'
+    if year is not None:
+        query_string = f'SELECT SUM("Total CO₂ emissions [m tonnes]"), "Ship type" FROM ships ' \
+                       f'WHERE [Reporting Period]=?' \
+                       f' GROUP BY "Ship type" ORDER BY SUM("Total CO₂ emissions [m tonnes]");'
 
-    response = cur.execute(query_string).fetchall()
+        response = cur.execute(query_string, (year,)).fetchall()
+    else:
+        query_string = f'SELECT SUM("Total CO₂ emissions [m tonnes]"), "Ship type" FROM ships ' \
+                       f' GROUP BY "Ship type" ORDER BY SUM("Total CO₂ emissions [m tonnes]");'
+
+        response = cur.execute(query_string).fetchall()
 
     conn.close()
 
     return {response_tuple[1]: response_tuple[0] for response_tuple in response}
 
 
-def count_ship_types(year: str, db_name: str = 'mrv_emissions.db') -> Dict:
+def count_ship_types(year: Union[str, None], db_name: str = 'mrv_emissions.db') -> Dict:
     """Queries database for total number of ships of each type"""
     conn = sqlite3.connect(db_name)
     cur = conn.cursor()
 
-    year_string = 'ships_'+year
-    query_string = f'SELECT COUNT("Ship type"), "Ship type" FROM {year_string} GROUP BY "Ship type";'
+    if year is not None:
+        query_string = f'SELECT COUNT("Ship type"), "Ship type" FROM ships ' \
+                       f'WHERE [Reporting Period]=?' \
+                       f'GROUP BY "Ship type";'
 
-    response = cur.execute(query_string).fetchall()
+        response = cur.execute(query_string, (year,)).fetchall()
+    else:
+        query_string = f'SELECT COUNT("Ship type"), "Ship type" FROM ships ' \
+                       f'GROUP BY "Ship type";'
+
+        response = cur.execute(query_string).fetchall()
 
     conn.close()
 

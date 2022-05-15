@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, Response, render_template
 from pandas_utils import read_given_years_to_df
-from utils import sum_groupby_results_across_years, totals_to_percentages, clean_response
+from utils import totals_to_percentages, clean_response
 from sql_utils import create_sqlite_database, query_db_with_args, get_co2_by_ship_type, count_ship_types
 from typing import Union
 import os
@@ -15,7 +15,6 @@ app = Flask(__name__)
 
 # TODO: Pull the data from website directly?
 # TODO: Use SQLAlchemy ORM for database management, access, etc.
-# TODO: Put all years into the same table within the database
 # TODO: Use pandas instead of dicts where possible
 
 # Do some setup if a database isn't already set up
@@ -53,7 +52,7 @@ def fetch_ships() -> Union[Response, str]:
      NOTE: Ships can share a name, so only IMOs uniquely identify a vessel.
      """
     # TODO: have user input params on page instead of navigating via url?
-    # Some simple error handling
+    # Handle errors for invalid arguments
     invalid_args = []
     for arg in request.args:
         if arg not in {'name', 'imo', 'year'}:
@@ -74,17 +73,17 @@ def fetch_ships() -> Union[Response, str]:
         ship_imo = None
 
     if 'year' in request.args:
-        year = [request.args['year']]  # TODO: what about querying a pair of years?
+        year = request.args['year']  # TODO: what about querying a pair of years?
         if year not in ['2018', '2019', '2020']:
             return f"Invalid year {year}.\nMust be one of ['2018', '2019', '2020']"
     else:
         year = None
 
-    # Filter data based on ship name/IMO and years
+    # Filter data based on ship name, IMO, and year
     filtered_data = query_db_with_args(ship_name, ship_imo, year)
 
     # Clean  up the response by adding in field names and grouping them
-    if len(filtered_data) > 0:  # Invalid name/imo combinations return empty lists
+    if len(filtered_data) > 0:  # Invalid name/imo combinations return empty dataframe
         filtered_data = clean_response(filtered_data)
 
     return jsonify(filtered_data)
@@ -99,7 +98,7 @@ def total_co2_emissions() -> Union[Response, str]:
 
      Returns data for year if specified, otherwise for all years.
      """
-    # Some simple error handling
+    # Handle errors for invalid arguments
     invalid_args = []
     for arg in request.args:
         if arg not in {'year'}:
@@ -107,41 +106,30 @@ def total_co2_emissions() -> Union[Response, str]:
     if len(invalid_args) > 0:
         return f"Invalid arg(s) {invalid_args}.\nArgument must be either [year] or left blank."
 
-    # TODO: specify year arg as in the fetch_ships function
+    # Parse arguments
     if 'year' in request.args:
-        year = [request.args['year']]
+        year = request.args['year']
         if year not in ['2018', '2019', '2020']:
             return f"Invalid year {year}.\nMust be one of ['2018', '2019', '2020']"
     else:
         year = None  # Default to all years
 
     # Querying database to get necessary data
-    # TODO: update how these queries are performed now that all years are in the same table
     co2_by_ship_type = get_co2_by_ship_type(year)
     ship_type_counts = count_ship_types(year)
-
-    # TODO: we no longer need to sum across all years
-    # If we've queried > 1 years, add in total across years
-    if len(years) > 1:
-        year_keys = list(co2_by_ship_type.keys())
-        year_keys.sort(key=int)
-        co2_by_ship_type[year_keys[0]+'-'+year_keys[-1]] = sum_groupby_results_across_years(co2_by_ship_type)
-        ship_type_counts[year_keys[0]+'-'+year_keys[-1]] = sum_groupby_results_across_years(ship_type_counts)
 
     # Normalise data to show % of total in a given time period per ship
     proportion_co2_by_ship_type = totals_to_percentages(copy.deepcopy(co2_by_ship_type))
     proportion_ship_type_counts = totals_to_percentages(copy.deepcopy(ship_type_counts))
 
-    # TODO: Put these data into a dataframe instead of a dict
     # Group results per year
-    co2_and_count_per_ship_type = {year_key: {'co2 emissions': {'value': co2_by_ship_type[year_key],
-                                                                'proportion': proportion_co2_by_ship_type[year_key]},
-                                              'number of ships': {'value': ship_type_counts[year_key],
-                                                                  'proportion': proportion_ship_type_counts[year_key]}}
+    co2_and_count_per_ship_type = {year_key: {'co2 emissions': {'value': co2_by_ship_type,
+                                                                'proportion': proportion_co2_by_ship_type},
+                                              'number of ships': {'value': ship_type_counts,
+                                                                  'proportion': proportion_ship_type_counts}}
                                    for year_key in co2_by_ship_type.keys()}
 
-    # TODO: handle multiple years worth of plots
-    # TODO: create a navigation page like this:
+    # TODO: create a navigation page like this for multiple types of plot:
     #  https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
     # Create plot
     # TODO: make this plotting a separate function
