@@ -39,46 +39,44 @@ def create_sqlite_database(years_data: Dict[str, pd.DataFrame]) -> None:
 
 # TODO: could be a more informative name here - if we have other functions this might not be the only query type
 def query_db_with_args(ship_name: Union[str, None], ship_imo: Union[str, None],
-                       years: List[str, None], db_name: str = 'mrv_emissions.db') -> Dict:
+                       year: Union[str, None], db_name: str = 'mrv_emissions.db') -> List:
     """Queries database for ship data that matches the filter arguments for name/imo/year"""
-    result = {}
     conn = sqlite3.connect(db_name)
     cur = conn.cursor()
     # TODO: error handling if wrong database specified etc.
 
-    # TODO: refactor this to query from single table - currently broken with new table setup
-    # TODO: select year by 'Reporting Period' field in the table
     # Handling different combinations of ship name and ship IMO
     if ship_name is not None and ship_imo is not None:
-        for year in years:
-            year_string = 'ships_'+year
-            query_string = f"SELECT * FROM {year_string} WHERE Name=? AND [IMO Number]=?;"
+        if year is not None:
+            query_string = f"SELECT * FROM ships WHERE Name=? AND [IMO Number]=? AND [Reporting Period]=?;"
+            response = cur.execute(query_string, (ship_name, ship_imo, year)).fetchall()
+
+        else:
+            query_string = f"SELECT * FROM ships WHERE Name=? AND [IMO Number]=?;"
             response = cur.execute(query_string, (ship_name, ship_imo)).fetchall()
-            result[year] = response
 
     elif ship_name is not None:
-        for year in years:
-            year_string = 'ships_'+year
-            query_string = f"SELECT * FROM {year_string} WHERE Name=?;"
-            response = cur.execute(query_string, (ship_name,)).fetchall()
-            result[year] = response
+        if year is not None:
+            query_string = f"SELECT * FROM ships WHERE Name=? AND [Reporting Period]=?;"
+            response = cur.execute(query_string, (ship_name, year)).fetchall()
+        else:
+            query_string = f"SELECT * FROM ships WHERE Name=?;"
+            response = cur.execute(query_string, (ship_name, year)).fetchall()
 
     elif ship_imo is not None:
-        for year in years:
-            year_string = 'ships_'+year
-            query_string = f"SELECT * FROM {year_string} WHERE [IMO Number]=?;"
+        if year is not None:
+            query_string = f"SELECT * FROM ships WHERE [IMO Number]=? AND [Reporting Period]=?;"
+            response = cur.execute(query_string, (ship_imo, year)).fetchall()
+        else:
+            query_string = f"SELECT * FROM ships WHERE [IMO Number]=?;"
             response = cur.execute(query_string, (ship_imo,)).fetchall()
-            result[year] = response
     else:
-        for year in years:
-            year_string = 'ships_'+year
-            query_string = f"SELECT * FROM {year_string};"
-            response = cur.execute(query_string).fetchall()
-            result[year] = response
+        query_string = f"SELECT * FROM ships;"
+        response = cur.execute(query_string).fetchall()
 
     conn.close()
 
-    return result
+    return response
 
 
 def get_co2_by_ship_type(year: str, db_name: str = 'mrv_emissions.db') -> Dict:

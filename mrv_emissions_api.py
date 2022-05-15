@@ -74,17 +74,18 @@ def fetch_ships() -> Union[Response, str]:
         ship_imo = None
 
     if 'year' in request.args:
-        years = [request.args['year']]  # TODO: what about querying a pair of years?
+        year = [request.args['year']]  # TODO: what about querying a pair of years?
+        if year not in ['2018', '2019', '2020']:
+            return f"Invalid year {year}.\nMust be one of ['2018', '2019', '2020']"
     else:
-        years = None
+        year = None
 
     # Filter data based on ship name/IMO and years
-    filtered_data = query_db_with_args(ship_name, ship_imo, years)
+    filtered_data = query_db_with_args(ship_name, ship_imo, year)
 
     # Clean  up the response by adding in field names and grouping them
-    for year in filtered_data.keys():
-        if len(filtered_data[year]) > 0:  # Invalid name/imo combinations return empty lists
-            filtered_data[year] = clean_response(filtered_data[year])
+    if len(filtered_data) > 0:  # Invalid name/imo combinations return empty lists
+        filtered_data = clean_response(filtered_data)
 
     return jsonify(filtered_data)
 
