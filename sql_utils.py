@@ -12,7 +12,7 @@ def create_sqlite_database(years_data: Dict[str, pd.DataFrame]) -> None:
 
     # Add the table
     cols = original_dataset_fields()
-    create_table_syntax = f'CREATE TABLE ships("{cols[0]}" PRIMARY KEY, "{cols[1]}", "{cols[2]}", "{cols[3]}",' \
+    create_table_syntax = f'CREATE TABLE ships(PK_ships PRIMARY KEY, "{cols[0]}", "{cols[1]}", "{cols[2]}", "{cols[3]}",' \
                           f' "{cols[4]}", "{cols[5]}", "{cols[6]}", "{cols[7]}", "{cols[8]}", "{cols[9]}", "{cols[10]}",' \
                           f' "{cols[11]}", "{cols[12]}","{cols[13]}", "{cols[14]}", "{cols[15]}", "{cols[16]}",' \
                           f' "{cols[17]}", "{cols[18]}", "{cols[19]}", "{cols[20]}", "{cols[21]}", "{cols[22]}",' \
@@ -27,13 +27,13 @@ def create_sqlite_database(years_data: Dict[str, pd.DataFrame]) -> None:
     c.execute(create_table_syntax)
     conn.commit()
 
-    # Go through each year and add/append to the ships table
-    for year, year_df in years_data.items():
-        # Handling 2020 column naming differences (some names changed vs 2018 and 2019)
-        if year == '2020':
-            year_df = year_df.rename(columns={'Annual Time spent at sea [hours]': 'Annual Total time spent at sea [hours]',
+    # Handling 2020 column naming differences (one column name changed vs 2018 and 2019)
+    years_data['2020'] = years_data['2020'].rename(columns={'Annual Time spent at sea [hours]': 'Annual Total time spent at sea [hours]',
                                               'Time spent at sea [hours]': 'Total time spent at sea [hours]'})
-        year_df.to_sql(name='ships', con=conn, if_exists='append', index=False)
+
+    # Merging the dfs and writing to database
+    merged_df = pd.concat([df for df in years_data.values()], ignore_index=True)
+    merged_df.to_sql(name='ships', con=conn, if_exists='append', index=True, index_label='PK_ships')
     conn.close()
 
 
