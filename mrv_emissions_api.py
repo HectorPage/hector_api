@@ -82,12 +82,9 @@ def fetch_ships() -> Union[Response, str]:
     # Filter data based on ship name, IMO, and year
     filtered_data = query_db_with_args(ship_name, ship_imo, year)
 
-    # Clean  up the response by adding in field names and grouping them
-    if len(filtered_data) > 0:  # Invalid name/imo combinations return empty dataframe
-        # TODO: need to correct how the data is being cleaned
-        filtered_data = clean_response(filtered_data)
-
-    return jsonify(filtered_data)
+    # TODO: group dataframe columns as in original xlsx
+    return render_template('tables.html', tables=[filtered_data.to_html(classes='data')],
+                           titles=filtered_data.columns.values)
 
 
 @app.route('/plots/totalCO2', methods=['GET'])

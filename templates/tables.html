@@ -1,0 +1,10 @@
+<!doctype html>
+<div class=page>
+  <h1>Surfer groups</h1>
+  {% for table in tables %}
+    <h2>{{titles[loop.index]}}</h2>
+    {{ table|safe }}
+  {% endfor %}
+</div>
+
+
