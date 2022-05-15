@@ -121,28 +121,21 @@ def total_co2_emissions() -> Union[Response, str]:
     proportion_co2_by_ship_type = totals_to_percentages(copy.deepcopy(co2_by_ship_type))
     proportion_ship_type_counts = totals_to_percentages(copy.deepcopy(ship_type_counts))
 
-    # Group results per year
-    co2_and_count_per_ship_type = {year_key: {'co2 emissions': {'value': co2_by_ship_type,
-                                                                'proportion': proportion_co2_by_ship_type},
-                                              'number of ships': {'value': ship_type_counts,
-                                                                  'proportion': proportion_ship_type_counts}}
-                                   for year_key in co2_by_ship_type.keys()}
-
     # TODO: create a navigation page like this for multiple types of plot:
     #  https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
     # Create plot
     # TODO: make this plotting a separate function
-    ship_proportion_data = [proportion_ship_type_counts['2018'][key]
-                            for key in proportion_ship_type_counts['2018'].keys()]
-    emission_proportion_data = [proportion_co2_by_ship_type['2018'][key]
-                                for key in proportion_ship_type_counts['2018'].keys()]
-    names = list(proportion_ship_type_counts['2018'].keys())
+    ship_proportion_data = [proportion_ship_type_counts[key]
+                            for key in proportion_ship_type_counts.keys()]
+    emission_proportion_data = [proportion_co2_by_ship_type[key]
+                                for key in proportion_ship_type_counts.keys()]
+    names = list(proportion_ship_type_counts.keys())
     fig = px.scatter(x=ship_proportion_data,
                      y=emission_proportion_data,
                      color=names,
                      labels={
-                         "x": "Proportion of ships",
-                         "y": "Proportion of CO₂ emissions",
+                         "x": "% of ships",
+                         "y": "% of CO₂ emissions",
                          "color": "Ship Type"
                      }
                      )
@@ -151,12 +144,7 @@ def total_co2_emissions() -> Union[Response, str]:
     max_x = max(ship_proportion_data)
     max_y = max(emission_proportion_data)
 
-    # TODO: add in a separate util
-    def round_up(n, decimals=0):
-        multiplier = 10 ** decimals
-        return math.ceil(n * multiplier) / multiplier
-
-    overall_max = round_up(max([max_x, max_y]), 2)
+    overall_max = math.ceil(max([max_x, max_y]))
     fig.update_layout(xaxis=dict(range=[0, overall_max]))
     fig.update_layout(yaxis=dict(range=[0, overall_max]))
     fig.add_shape(type="line",
@@ -168,17 +156,19 @@ def total_co2_emissions() -> Union[Response, str]:
                   opacity=0.5)
 
     # Export plot
-    header = "Proportion of CO₂ emissions vs. proportion of total ships"
+    if year is not None:
+        header = "Proportion of CO₂ emissions vs. proportion of total ships " + year
+    else:
+        header = "Proportion of CO₂ emissions vs. proportion of total ships 2018-2020"
+
     description = """
-       This figure compares the proportion of total CO₂ emissions and total ships for each ship type. This helps
+       This figure compares the percentage of total CO₂ emissions and total ships for each ship type. This helps
        to identify emissions-heavy ship types and prioritise actions to reduce emissions.
        """
 
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     return render_template('plots.html', graphJSON=graphJSON, header=header, description=description)
-
-    # return jsonify(co2_and_count_per_ship_type)
 
 
 if __name__ == '__main__':
