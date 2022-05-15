@@ -83,6 +83,7 @@ def fetch_ships() -> Union[Response, str]:
     filtered_data = query_db_with_args(ship_name, ship_imo, year)
 
     # TODO: group dataframe columns as in original xlsx
+    # TODO: try to create a prettier rendering
     return render_template('tables.html', tables=[filtered_data.to_html(classes='data')],
                            titles=filtered_data.columns.values)
 
