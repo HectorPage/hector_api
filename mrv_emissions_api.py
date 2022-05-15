@@ -107,18 +107,20 @@ def total_co2_emissions() -> Union[Response, str]:
     if len(invalid_args) > 0:
         return f"Invalid arg(s) {invalid_args}.\nArgument must be either [year] or left blank."
 
+    # TODO: specify year arg as in the fetch_ships function
     if 'year' in request.args:
-        years = [request.args['year']]
+        year = [request.args['year']]
+        if year not in ['2018', '2019', '2020']:
+            return f"Invalid year {year}.\nMust be one of ['2018', '2019', '2020']"
     else:
-        years = ['2018', '2019', '2020']  # Default to all years
+        year = None  # Default to all years
 
     # Querying database to get necessary data
-    co2_by_ship_type = {}
-    ship_type_counts = {}
-    for year in years:
-        co2_by_ship_type[year] = get_co2_by_ship_type(year)
-        ship_type_counts[year] = count_ship_types(year)
+    # TODO: update how these queries are performed now that all years are in the same table
+    co2_by_ship_type = get_co2_by_ship_type(year)
+    ship_type_counts = count_ship_types(year)
 
+    # TODO: we no longer need to sum across all years
     # If we've queried > 1 years, add in total across years
     if len(years) > 1:
         year_keys = list(co2_by_ship_type.keys())
