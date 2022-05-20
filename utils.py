@@ -1,4 +1,5 @@
-from typing import List, Tuple, Dict
+from typing import List, Dict, Union
+import pandas as pd
 
 
 def original_dataset_fields() -> List:
@@ -49,8 +50,10 @@ def original_dataset_fields() -> List:
         'Average density of the cargo transported [m tonnes / m³]']
 
 
-def clean_response(sql_query_response: List[Tuple]) -> Dict[str, Dict]:
+def clean_response(sql_query_response: pd.DataFrame) -> Dict[str, Dict]:
     """Takes a sql query response for ships matching certain filters, adds field names, and groups fields"""
+    # TODO: need to sort out this response cleaning - add multi level index
+    # https://stackoverflow.com/questions/21443963/pandas-multilevel-column-names
     cleaned_response = {}
     for ship_found in sql_query_response:
         response_with_names = {field_name: query_response_val for field_name, query_response_val
@@ -189,21 +192,7 @@ def group_metrics(ship_data: Dict) -> Dict:
     return grouped_ship_data
 
 
-def sum_groupby_results_across_years(values_by_ship_type: Dict[str, Dict]) -> Dict:
-    """Sums groupby results across years, only for groups that are in all years"""
-    # Get ship types that occur across all years
-    keys_per_year = [set(year_dict.keys()) for year_dict in values_by_ship_type.values()]
-    valid_ship_types = set(keys_per_year[0]).intersection(*keys_per_year)
-
-    all_years_data = {ship_type: sum([year_data[ship_type] for year_data in values_by_ship_type.values()])
-                      for ship_type in valid_ship_types}
-
-    return all_years_data
-
-
-def totals_to_percentages(year_data: Dict[str, Dict]) -> Dict[str, Dict]:
-    """Converts a list of numbers per ship per year into proportion of total per ship per year"""
-    for time_period, ship_type_data in year_data.items():
-        total = sum(ship_type_data.values())
-        year_data[time_period] = {ship_type: data/total for ship_type, data in ship_type_data.items()}
-    return year_data
+def totals_to_percentages(input_data: Dict[str, Union[float, int]]) -> Dict[str, Dict]:
+    """Converts a dict of numbers into percentages"""
+    total = sum(input_data.values())
+    return {key: (value/total)*100 for key, value in input_data.items()}
