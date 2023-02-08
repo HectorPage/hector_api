@@ -8,3 +8,4 @@ flask-marshmallow=0.14.0
 marshmallow-sqlalchemy==0.28.0
 marshmallow==3.15.0
 connexion==2.14.1
+numpy==1.22.3
