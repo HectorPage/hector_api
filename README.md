@@ -54,5 +54,9 @@ This API returns json objects, which are beautifully rendered in Firefox. I stro
 ## Unit testing ##
 Unit tests are provided in _hector_api/tests_
 
+# Resources #
+I relied on a couple of excellent resources to help me build this api. 
+- [Miguel Grinberg's awesome Flask tutorials](https://blog.miguelgrinberg.com/post/beautiful-flask-tables-part-2)
+- [Python REST APIs With Flask, Connexion, and SQLAlchemy](https://realpython.com/flask-connexion-rest-api/)
 # Get in touch #
 Any questions, comments, or enquiries welcome:([hpage90@gmail.com](mailto:hpage90@gmail.com))
