@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, Response, render_template
-from pandas_utils import read_given_years_to_df
+from pandas_utils import read_given_years_to_df, clean_dataset
 from utils import totals_to_percentages, clean_response
-from sql_utils import create_sqlite_database, query_db_with_args, get_co2_by_ship_type, count_ship_types
+from sql_utils import create_sqlite_database
 from typing import Union
 import os
 import copy
@@ -10,7 +10,12 @@ import plotly
 import plotly.express as px
 import math
 
-app = Flask(__name__)
+import config
+from ships import read_filtered, get_co2_by_ship_type, count_ship_types
+
+
+app = config.connex_app
+app.add_api("swagger.yml")
 
 
 # TODO: Pull the data from website directly?
@@ -23,6 +28,7 @@ if not os.path.exists('mrv_emissions.db'):
     # TODO: should unit test these as well, but ran out of time
     # Set up an in-memory dict of pandas df per year (to avoid loading the data every request - openpyxl is really slow)
     ALL_YEARS_DATA = read_given_years_to_df(['2018', '2019', '2020'])
+    ALL_YEARS_DATA = clean_dataset(ALL_YEARS_DATA)
 
     # Set up a sqlite database to demonstrate sql querying
     create_sqlite_database(ALL_YEARS_DATA)
@@ -39,19 +45,8 @@ def home() -> str:
            "<br/>For enquiries/questions contact: hpage90@gmail.com"
 
 
-@app.route('/ships', methods=['GET'])
+@app.route("/ships", methods=['GET'])
 def fetch_ships() -> Union[Response, str]:
-    """
-     Method to return ship records, with the option of specifying any combination of:
-     - Year (all years if not specified)
-     - Ship name
-     - Ship IMO
-
-     If neither name or IMO are specified, all ships will be returned for chosen year(s).
-
-     NOTE: Ships can share a name, so only IMOs uniquely identify a vessel.
-     """
-    # TODO: have user input params on page instead of navigating via url?
     # Handle errors for invalid arguments
     invalid_args = []
     for arg in request.args:
@@ -59,8 +54,8 @@ def fetch_ships() -> Union[Response, str]:
             invalid_args.append(arg)
     if len(invalid_args) > 0:
         return f"Invalid arg(s) {invalid_args}.\nMust be one of [name, imo, year]"
-    # TODO: return a proper error to be displayed in browser
 
+    # TODO: implement filtering by ship/year/imo as part of the data table when returning all ships?
     # Parse arguments
     if 'name' in request.args:  # TODO: what about multiple names/IMOs?
         ship_name = request.args['name'].upper()  # Accept lower case ship names
@@ -73,19 +68,16 @@ def fetch_ships() -> Union[Response, str]:
         ship_imo = None
 
     if 'year' in request.args:
-        year = request.args['year']  # TODO: what about querying a pair of years?
-        if year not in ['2018', '2019', '2020']:
+        year = int(request.args['year'])  # TODO: what about querying a pair of years?
+        if year not in [2018, 2019, 2020]:
             return f"Invalid year {year}.\nMust be one of ['2018', '2019', '2020']"
     else:
         year = None
 
-    # Filter data based on ship name, IMO, and year
-    filtered_data = query_db_with_args(ship_name, ship_imo, year)
+    # Read filtered ship data
+    ships = read_filtered(ship_name, ship_imo, year)
 
-    # TODO: group dataframe columns as in original xlsx
-    # TODO: try to create a prettier rendering
-    return render_template('tables.html', tables=[filtered_data.to_html(classes='data')],
-                           titles=filtered_data.columns.values)
+    return render_template("tables.html", ships=ships)
 
 
 @app.route('/plots/totalCO2', methods=['GET'])
@@ -124,7 +116,7 @@ def total_co2_emissions() -> Union[Response, str]:
     # TODO: create a navigation page like this for multiple types of plot:
     #  https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
     # Create plot
-    # TODO: make this plotting a separate function
+    # TODO: make this plotting a separate function perhaps?
     ship_proportion_data = [proportion_ship_type_counts[key]
                             for key in proportion_ship_type_counts.keys()]
     emission_proportion_data = [proportion_co2_by_ship_type[key]

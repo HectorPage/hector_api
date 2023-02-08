@@ -50,6 +50,55 @@ def original_dataset_fields() -> List:
         'Average density of the cargo transported [m tonnes / m³]']
 
 
+def num_cols() -> List:
+    return [
+        "Total fuel consumption [m tonnes]",
+        "Fuel consumptions assigned to On laden [m tonnes]",
+        "Total CO₂ emissions [m tonnes]",
+        "CO₂ emissions from all voyages between ports under a MS jurisdiction [m tonnes]",
+        "CO₂ emissions from all voyages which departed from ports under a MS jurisdiction [m tonnes]",
+        "CO₂ emissions from all voyages to ports under a MS jurisdiction [m tonnes]",
+        "CO₂ emissions which occurred within ports under a MS jurisdiction at berth [m tonnes]",
+        "CO₂ emissions assigned to Passenger transport [m tonnes]",
+        "CO₂ emissions assigned to Freight transport [m tonnes]",
+        "CO₂ emissions assigned to On laden [m tonnes]",
+        "Annual Total time spent at sea [hours]",
+        "Annual average Fuel consumption per distance [kg / n mile]",
+        "Annual average Fuel consumption per transport work (mass) [g / m tonnes · n miles]",
+        "Annual average Fuel consumption per transport work (volume) [g / m³ · n miles]",
+        "Annual average Fuel consumption per transport work (dwt) [g / dwt carried · n miles]",
+        "Annual average Fuel consumption per transport work (pax) [g / pax · n miles]",
+        "Annual average Fuel consumption per transport work (freight) [g / m tonnes · n miles]",
+        "Annual average CO₂ emissions per distance [kg CO₂ / n mile]",
+        "Annual average CO₂ emissions per transport work (mass) [g CO₂ / m tonnes · n miles]",
+        "Annual average CO₂ emissions per transport work (volume) [g CO₂ / m³ · n miles]",
+        "Annual average CO₂ emissions per transport work (dwt) [g CO₂ / dwt carried · n miles]",
+        "Annual average CO₂ emissions per transport work (pax) [g CO₂ / pax · n miles]",
+        "Annual average CO₂ emissions per transport work (freight) [g CO₂ / m tonnes · n miles]",
+        "Through ice [n miles]",
+        "Total time spent at sea [hours]",
+        "Total time spent at sea through ice [hours]",
+        "Fuel consumption per distance on laden voyages [kg / n mile]",
+        "Fuel consumption per transport work (mass) on laden voyages [g / m tonnes · n miles]",
+        "Fuel consumption per transport work (volume) on laden voyages [g / m³ · n miles]",
+        "Fuel consumption per transport work (dwt) on laden voyages [g / dwt carried · n miles]",
+        "Fuel consumption per transport work (pax) on laden voyages [g / pax · n miles]",
+        "Fuel consumption per transport work (freight) on laden voyages [g / m tonnes · n miles]",
+        "CO₂ emissions per distance on laden voyages [kg CO₂ / n mile]",
+        "CO₂ emissions per transport work (mass) on laden voyages [g CO₂ / m tonnes · n miles]",
+        "CO₂ emissions per transport work (volume) on laden voyages [g CO₂ / m³ · n miles]",
+        "CO₂ emissions per transport work (dwt) on laden voyages [g CO₂ / dwt carried · n miles]",
+        "CO₂ emissions per transport work (pax) on laden voyages [g CO₂ / pax · n miles]",
+        "CO₂ emissions per transport work (freight) on laden voyages [g CO₂ / m tonnes · n miles]",
+        "Average density of the cargo transported [m tonnes / m³]"
+    ]
+
+
+date_cols = [
+        "DoC issue date",
+        "DoC expiry date"]
+
+
 def clean_response(sql_query_response: pd.DataFrame) -> Dict[str, Dict]:
     """Takes a sql query response for ships matching certain filters, adds field names, and groups fields"""
     # TODO: need to sort out this response cleaning - add multi level index

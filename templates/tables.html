@@ -1,9 +1,49 @@
 <!doctype html>
-<div class=page>
-  {% for table in tables %}
-    <h2>{{titles[loop.index]}}</h2>
-    {{ table|safe }}
-  {% endfor %}
-</div>
-
-
+<html>
+  <head>
+    <title>Ship Data</title>
+    <link href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css" rel="stylesheet" />
+    <style>
+      body {
+        font-family: Sans-Serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <h1>Ship Data</h1>
+      <hr>
+      <div id="table"></div>
+    </div>
+    <script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
+    <script>
+      new gridjs.Grid({
+        columns: [
+          { id: 'name', name: 'Name' },
+          { id: 'imo', name: 'IMO #' },
+          { id: 'type', name: 'Type', sort: false },
+          { id: 'year', name: 'Year', sort: false },
+          { id: 'co2', name: 'Total CO₂ emissions [m tonnes]' },
+          { id: 'fuel', name: 'Total fuel consumption [m tonnes]' },
+        ],
+        data: [
+          {% for ship in ships %}
+            {
+              name: '{{ ship.name }}',
+              imo: {{ ship.imo_number }},
+              type: '{{ ship.ship_type }}',
+              year: '{{ ship.reporting_period }}',
+              co2: '{{ ship.total_co2_emissions }}',
+              fuel: '{{ ship.total_fuel_consumption }}'
+            },
+          {% endfor %}
+        ],
+        search: {
+          selector: (cell, rowIndex, cellIndex) => [0, 1, 4].includes(cellIndex) ? cell : null,
+        },
+        sort: true,
+        pagination: true,
+      }).render(document.getElementById('table'));
+    </script>
+  </body>
+</html>
