@@ -149,13 +149,13 @@ def total_co2_emissions() -> Union[Response, str]:
 
     # Export plot
     if year is not None:
-        header = "Proportion of CO₂ emissions vs. proportion of total ships " + year
+        header = f"Who emitted the most CO₂ in {year}?"
     else:
-        header = "Proportion of CO₂ emissions vs. proportion of total ships 2018-2020"
+        header = "Who emitted the most CO₂ in 2018-2020?"
 
     description = """
-       This figure compares the percentage of total CO₂ emissions and total ships for each ship type. This helps
-       to identify emissions-heavy ship types and prioritise actions to reduce emissions.
+        Container ships emitted the greatest proportion of CO₂ - much more than would be expected given the proportion 
+        of total ships in the EU MRV system that they represent.
        """
 
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
