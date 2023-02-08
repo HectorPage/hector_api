@@ -3,9 +3,11 @@ from openpyxl import load_workbook
 from typing import Union, Dict
 import os
 import warnings
+from utils import num_cols
+import numpy as np
 
 
-def read_given_years_to_df(years: Union[str, list]) -> Dict[str, pd.DataFrame]:
+def read_given_years_to_df(years: Union[str, list]) -> pd.DataFrame:
     """
     Function to load data for given years.
     """
@@ -19,7 +21,15 @@ def read_given_years_to_df(years: Union[str, list]) -> Dict[str, pd.DataFrame]:
         this_year_filename = find_data_for_year(year)
         datasets[year] = read_xlsx_to_df(this_year_filename)
 
-    return datasets
+    # Handling 2020 column naming differences (one column name changed vs 2018 and 2019)
+    datasets['2020'] = datasets['2020'].rename(
+        columns={'Annual Time spent at sea [hours]': 'Annual Total time spent at sea [hours]',
+                 'Time spent at sea [hours]': 'Total time spent at sea [hours]'})
+
+    # Merging the dfs
+    merged_df = pd.concat([df for df in datasets.values()], ignore_index=True)
+
+    return merged_df
 
 
 def find_data_for_year(year: str) -> str:
@@ -64,5 +74,27 @@ def read_xlsx_to_df(filename: str) -> pd.DataFrame:
 
     # First two header rows not needed
     df = df.iloc[3:]
+
+    return df
+
+
+def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
+    # Converting numeric columns - the errors='coerce' option replaces non-numeric strings with nans
+    number_cols = num_cols()
+    df[number_cols] = df[number_cols].apply(pd.to_numeric, errors='coerce', axis=1)
+
+    # Replacing any error values
+    df = df.replace('Not Applicable', np.NaN)
+    df = df.replace('N/A', np.NaN)
+    df = df.replace('NA', np.NaN)
+    df = df.replace('None', np.NaN)
+    df = df.replace('Division by zero!', np.NaN)
+
+    # Cleaning the date columns
+    df['DoC issue date'] = df['DoC issue date'].replace('DoC not issued', pd.NaT)
+    df['DoC expiry date'] = df['DoC expiry date'].replace('DoC not issued', pd.NaT)
+
+    df['DoC issue date'] = pd.to_datetime(df['DoC issue date'], format='%d/%m/%Y')
+    df['DoC expiry date'] = pd.to_datetime(df['DoC expiry date'], format='%d/%m/%Y')
 
     return df

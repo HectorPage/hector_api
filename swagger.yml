@@ -1,0 +1,176 @@
+openapi: 3.0.0
+info:
+  title: "EU MRV Shipping Emissions API"
+  description: "EU MRV Shipping Emissions API"
+  version: "1.0.0"
+
+servers:
+  - url: "/api"
+
+components:
+  schemas:
+    Ship:
+      type: "object"
+      required:
+        - imo_number
+        - name
+        - reporting_year
+      properties:
+        pk_ships:
+          type: integer
+        imo_number:
+          type: integer
+        name:
+          type: string
+        ship_type:
+          type: string
+        reporting_period:
+          type: integer
+        technical_efficiency:
+          type: string
+        port_of_registry:
+          type: string
+        home_port:
+          type: string
+        ice_class:
+          type: string
+        doc_issue_date:
+          type: string
+        doc_expiry_date:
+          type: string
+        verifier_number:
+          type: integer
+        verifier_name:
+          type: string
+        verifier_nab:
+          type: string
+        verifier_address:
+          type: string
+        verifier_city:
+          type: string
+        verifier_accreditation_number:
+          type: string
+        verifier_country:
+          type: string
+        monitoring_method_a:
+          type: string
+        monitoring_method_b:
+          type: string
+        monitoring_method_c:
+          type: string
+        monitoring_method_d:
+          type: string
+        total_fuel_consumption:
+          type: number
+        fuel_consumption_on_laden:
+          type: number
+        total_co2_emissions:
+          type: number
+        co2_emissions_between_ms_ports:
+          type: number
+        co2_emissions_departing_ms_ports:
+          type: number
+        co2_emissions_arriving_ms_ports:
+          type: number
+        co2_emissions_berthed_ms_ports:
+          type: number
+        co2_emissions_passenger:
+          type: number
+        co2_emissions_freight:
+          type: number
+        co2_emissions_on_laden:
+          type: number
+        annual_total_time_at_sea:
+          type: number
+        annual_avg_fuel_consumption_per_distance:
+          type: number
+        annual_avg_fuel_consumption_per_work_mass:
+          type: number
+        annual_avg_fuel_consumption_per_work_volume:
+          type: number
+        annual_avg_fuel_consumption_per_work_dwt:
+          type: number
+        annual_avg_fuel_consumption_per_work_pax:
+          type: number
+        annual_avg_fuel_consumption_per_work_freight:
+          type: number
+        annual_avg_co2_emissions_per_distance:
+          type: number
+        annual_avg_co2_emissions_per_work_mass:
+          type: number
+        annual_avg_co2_emissions_per_work_volume:
+          type: number
+        annual_avg_co2_emissions_per_work_dwt:
+          type: number
+        annual_avg_co2_emissions_per_work_pax:
+          type: number
+        annual_avg_co2_emissions_per_work_freight:
+          type: number
+        through_ice:
+          type: number
+        total_time_at_sea:
+          type: number
+        total_time_at_sea_ice:
+          type: number
+        fuel_consumption_per_distance_laden:
+          type: number
+        fuel_consumption_per_work_mass_laden:
+          type: number
+        fuel_consumption_per_work_volume_laden:
+          type: number
+        fuel_consumption_per_work_dwt_laden:
+          type: number
+        fuel_consumption_per_work_pax_laden:
+          type: number
+        fuel_consumption_per_work_freight_laden:
+          type: number
+        co2_emissions_per_distance_laden:
+          type: number
+        co2_emissions_per_work_mass_laden:
+          type: number
+        co2_emissions_per_work_volume_laden:
+          type: number
+        co2_emissions_per_work_dwt_laden:
+          type: number
+        co2_emissions_per_work_pax_laden:
+          type: number
+        co2_emissions_per_work_freight_laden:
+          type: number
+        additional_info:
+          type: string
+        average_cargo_density:
+          type: string
+  parameters:
+    name:
+      name: "name"
+      description: "Name of the ship"
+      in: path
+      required: True
+      schema:
+        type: "string"
+    imo_number:
+      name: "imo_number"
+      description: "IMO number of the ship"
+      in: path
+      required: True
+      schema:
+        type: "string"
+    reporting_period:
+      name: "reporting_period"
+      description: "Reporting year of the ship"
+      in: path
+      required: True
+      schema:
+        type: "integer"
+
+paths:
+  /ships:
+    get:
+      operationId: "ships.read_filtered"
+      tags:
+        - "Ships"
+      summary: "Read the list of ships, optionally filtered by combinations of Name/IMO Number/Reporting Period"
+      responses:
+        "200":
+          description: "Successfully read ships list"
+
