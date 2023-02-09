@@ -66,3 +66,12 @@ def count_ship_types(year: Union[str, None]) -> Dict:
     return {response_tuple[0]: response_tuple[1] for response_tuple in response}
 
 
+def get_fuel_by_ship_type(year: Union[str, None]) -> Dict:
+
+    if year is not None:
+        response = db.session.query(Ship.ship_type, func.sum(Ship.total_fuel_consumption))\
+            .filter(Ship.reporting_period == int(year)).group_by(Ship.ship_type).all()
+    else:
+        response = db.session.query(Ship.ship_type, func.sum(Ship.total_fuel_consumption)).group_by(Ship.ship_type).all()
+
+    return {response_tuple[0]: response_tuple[1] for response_tuple in response}

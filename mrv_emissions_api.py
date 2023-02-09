@@ -1,17 +1,14 @@
-from flask import Flask, request, jsonify, Response, render_template
+from flask import request, Response, render_template
 from pandas_utils import read_given_years_to_df, clean_dataset
-from utils import totals_to_percentages, clean_response
+from utils import totals_to_percentages
 from sql_utils import create_sqlite_database
 from typing import Union
 import os
 import copy
-import json
-import plotly
-import plotly.express as px
-import math
 
 import config
-from ships import read_filtered, get_co2_by_ship_type, count_ship_types
+from ships import read_filtered, get_co2_by_ship_type, count_ship_types, get_fuel_by_ship_type
+from plotting import create_scatter_plot, create_bar_plot
 
 
 app = config.connex_app
@@ -19,13 +16,12 @@ app.add_api("swagger.yml")
 
 
 # TODO: Pull the data from website directly?
-# TODO: Use SQLAlchemy ORM for database management, access, etc.
 # TODO: Use pandas instead of dicts where possible
 
 # Do some setup if a database isn't already set up
 if not os.path.exists('mrv_emissions.db'):
     print('...Loading MRV data into mrv_emissions.db...')
-    # TODO: should unit test these as well, but ran out of time
+    # TODO: should unit test these as well
     # Set up an in-memory dict of pandas df per year (to avoid loading the data every request - openpyxl is really slow)
     ALL_YEARS_DATA = read_given_years_to_df(['2018', '2019', '2020'])
     ALL_YEARS_DATA = clean_dataset(ALL_YEARS_DATA)
@@ -108,59 +104,72 @@ def total_co2_emissions() -> Union[Response, str]:
     # Querying database to get necessary data
     co2_by_ship_type = get_co2_by_ship_type(year)
     ship_type_counts = count_ship_types(year)
+    fuel_by_ship_type = get_fuel_by_ship_type(year)
 
     # Normalise data to show % of total in a given time period per ship
     proportion_co2_by_ship_type = totals_to_percentages(copy.deepcopy(co2_by_ship_type))
     proportion_ship_type_counts = totals_to_percentages(copy.deepcopy(ship_type_counts))
+    proportion_fuel_by_ship_type = totals_to_percentages(copy.deepcopy(fuel_by_ship_type))
 
-    # TODO: create a navigation page like this for multiple types of plot:
-    #  https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
-    # Create plot
-    # TODO: make this plotting a separate function perhaps?
+    # Create bar plot
+    co2_by_ship_type_sorted = sorted(co2_by_ship_type.items(), key=lambda kv: -kv[1])
+    co2_values = [item[1] for item in co2_by_ship_type_sorted]
+    ship_values = [item[0] for item in co2_by_ship_type_sorted]
+    graphJSON_co2 = create_bar_plot(co2_values, ship_values, co2_values,
+                                    "Total CO₂ emissions [m tonnes]", "",  "")
+
+    # Create scatter plots
+    names = list(proportion_ship_type_counts.keys())
     ship_proportion_data = [proportion_ship_type_counts[key]
                             for key in proportion_ship_type_counts.keys()]
     emission_proportion_data = [proportion_co2_by_ship_type[key]
                                 for key in proportion_ship_type_counts.keys()]
-    names = list(proportion_ship_type_counts.keys())
-    fig = px.scatter(x=ship_proportion_data,
-                     y=emission_proportion_data,
-                     color=names,
-                     labels={
-                         "x": "% of ships",
-                         "y": "% of CO₂ emissions",
-                         "color": "Ship Type"
-                     }
-                     )
-    fig.update_traces(mode="markers")
-    # Set axis limits
-    max_x = max(ship_proportion_data)
-    max_y = max(emission_proportion_data)
+    fuel_proportion_data = [proportion_fuel_by_ship_type[key]
+                            for key in proportion_fuel_by_ship_type.keys()]
 
-    overall_max = math.ceil(max([max_x, max_y]))
-    fig.update_layout(xaxis=dict(range=[0, overall_max]))
-    fig.update_layout(yaxis=dict(range=[0, overall_max]))
-    fig.add_shape(type="line",
-                  x0=0,
-                  y0=0,
-                  x1=overall_max,
-                  y1=overall_max,
-                  layer='below',
-                  opacity=0.5)
+    graphJSON_co2_ships = create_scatter_plot(ship_proportion_data, emission_proportion_data, names,
+                                        "% of ships", "% of CO₂ emissions", "Ship Type")
 
-    # Export plot
+    graphJSON_co2_fuel = create_scatter_plot(emission_proportion_data, fuel_proportion_data, names,
+                                         "% of CO₂ emissions", "% of fuel consumption", "Ship Type")
+
+    # Add in headers and descriptions
     if year is not None:
-        header = f"Who emitted the most CO₂ in {year}?"
+        header_co2 = f"Who emitted the most CO₂ in {year}?"
+        header_co2_ships = f"Who emitted more than their fair share of CO₂ in {year}?"
+        header_co2_fuel = "CO₂ emissions are determined by fuel consumption"
     else:
-        header = "Who emitted the most CO₂ in 2018-2020?"
+        header_co2 = "Who emitted the most CO₂ in 2018-2020?"
+        header_co2_ships = "Who emitted more than their fair share of CO₂ in 2018-2020?"
+        header_co2_fuel = "CO₂ emissions are determined by fuel consumption"
 
-    description = """
-        Container ships emitted the greatest proportion of CO₂ - much more than would be expected given the proportion 
-        of total ships in the EU MRV system that they represent.
+    description_co2 = f"""
+            Container ships emitted the most CO₂ overall: {int(co2_by_ship_type['Container ship'])}
+            metric tonnes.
+           """
+
+    description_co2_ships = f"""
+        Container ships emitted much more CO₂ than would be expected given the proportion 
+        of total ships in the EU MRV system that they 
+        represent: ({proportion_co2_by_ship_type["Container ship"]:.2f}% of CO₂ 
+        but just {proportion_ship_type_counts["Container ship"]:.2f}% of ships).
+        On the other hand, Bulk Carriers emitted far less CO₂
+        than expected given the proportion of ships they 
+        represent ({proportion_co2_by_ship_type["Bulk carrier"]:.2f}% of CO₂
+        , {proportion_ship_type_counts["Bulk carrier"]:.2f}% of ships).
        """
 
-    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    description_co2_fuel = """
+            The proportion of CO₂ emissions from a given ship type depends directly on fuel consumption for that
+            ship type. Container ships emit more than their share of CO₂ because they burn more fuel per ship. 
+            Similarly, Bulk Carriers burn less fuel per ship so emit less than their share of CO₂.
+           """
 
-    return render_template('plots.html', graphJSON=graphJSON, header=header, description=description)
+    # TODO: this isn't very elegant usage of html template, could improve dashboard in the future
+    return render_template('plots.html',
+                           graphJSON1=graphJSON_co2, header1=header_co2, description1=description_co2,
+                           graphJSON2=graphJSON_co2_ships, header2=header_co2_ships, description2=description_co2_ships,
+                           graphJSON3=graphJSON_co2_fuel, header3=header_co2_fuel, description3=description_co2_fuel)
 
 
 if __name__ == '__main__':

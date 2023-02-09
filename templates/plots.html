@@ -1,14 +1,26 @@
 <!DOCTYPE html>
 <html>
 <body style="font-family:arial, sans-serif">
-    <h1>{{header}}</h1>
-    <div>{{description}}</div>
+    <h1>{{header1}}</h1>
+    <div>{{description1}}</div>
     <div id="chart" class="chart"></div>
+
+    <h1>{{header2}}</h1>
+    <div>{{description2}}</div>
+    <div id="chart2" class="chart"></div>
+
+    <h1>{{header3}}</h1>
+    <div>{{description3}}</div>
+    <div id="chart3" class="chart"></div>
 </body>
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script type="text/javascript">
-    var graphs = {{graphJSON | safe}};
-    Plotly.plot('chart',graphs,{});
+    var graphs1 = {{graphJSON1 | safe}};
+    var graphs2 = {{graphJSON2 | safe}};
+    var graphs3 = {{graphJSON3 | safe}};
+    Plotly.plot('chart',graphs1,{});
+    Plotly.plot('chart2',graphs2,{});
+    Plotly.plot('chart3',graphs3,{});
 </script>
 </html>
 

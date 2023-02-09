@@ -1,6 +1,9 @@
 # README #
 
 This is the repository for my Flask API accessing EU MRV data (https://mrv.emsa.europa.eu/#public/emission-report).
+It provides two endpoints:
+- 'ships' gives access to row level data filtered by various conditions
+- 'plots/totalCO2' gives access to a brief dashboard summary of the data (You can see an example of this dashboard included in this repo: see co2_dashboard.pdf) 
 
 ## Setup ##
 ### Downloading datasets ###
@@ -39,10 +42,12 @@ NOTE 1: If no year argument is specific, all matching data for 2018-2020 is retu
 NOTE 2: Ships can share a name, so only IMO uniquely identifies a given vessel.
 
 You can combine filters by separating them with an '&' symbol in the address, for example [http://127.0.0.1:5000/ships?name=ASTORIA&year=2020]()
-### Total CO2 emissions endpoint ###
+### Total CO2 emissions dashboard ###
 [http://127.0.0.1:5000/plots/totalCO2]() returns data on
-- Proportion of total CO2 emissions for a given year per ship type
-- Proportion of total ships each ship type represents
+- Total CO2 emissions by ship type
+- Proportion of total CO2 emissions vs proportion of ships per ship type
+- Proportion of total CO2 emissions vs proportion of total fuel consumption per ship type
+You can see an example of this dashboard included in this repo: see co2_dashboard.pdf
 
 The intention is to help identify ship types that contribute more than their fair share of emissions.
 
