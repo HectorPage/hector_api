@@ -34,11 +34,7 @@ else:
 
 @app.route('/', methods=['GET'])
 def home() -> str:
-    # TODO: could use proper HTML rendering with a template:
-    #  https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-ii-templates
-    return "This is Hector Page's API for EU MRV data on CO2 emissions from maritime transport 2018-20." \
-           "<br/>See here for more details: https://mrv.emsa.europa.eu/#public/emission-report" \
-           "<br/>For enquiries/questions contact: hpage90@gmail.com"
+    return render_template("home.html")
 
 
 @app.route("/ships", methods=['GET'])
