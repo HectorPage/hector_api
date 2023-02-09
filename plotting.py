@@ -2,9 +2,11 @@ import json
 import plotly
 import plotly.express as px
 import math
+from typing import List
 
 
-def create_bar_plot(x_data, y_data, color_data, x_text, y_text, color_text):
+def create_bar_plot(x_data: List, y_data: List, color_data: List,
+                    x_text: str, y_text: str, color_text: str) -> str:
     fig = px.bar(x=x_data, y=y_data, color=color_data,
                  labels={
                      "x": x_text,
@@ -16,7 +18,8 @@ def create_bar_plot(x_data, y_data, color_data, x_text, y_text, color_text):
     return graphJSON
 
 
-def create_scatter_plot(x_data, y_data, color_data, x_text, y_text, color_text):
+def create_scatter_plot(x_data: List, y_data: List, color_data: List,
+                        x_text: str, y_text: str, color_text: str) -> str:
 
     fig = px.scatter(x=x_data,
                      y=y_data,
