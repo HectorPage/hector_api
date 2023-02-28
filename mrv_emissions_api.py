@@ -13,7 +13,7 @@ from plotting import create_scatter_plot, create_bar_plot
 
 app = config.connex_app
 app.add_api("swagger.yml")
-
+app = app.app
 
 # TODO: Pull the data from website directly?
 # TODO: Use pandas instead of dicts where possible
