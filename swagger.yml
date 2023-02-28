@@ -169,6 +169,22 @@ paths:
       operationId: "ships.read_filtered"
       tags:
         - "Ships"
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: Limits returned data to ships with this name
+        - in: query
+          name: imo
+          schema:
+            type: string
+          description: Limits returned data to ships with this IMO number
+        - in: query
+          name: year
+          schema:
+            type: integer
+          description: Limits returned data to reporting year specified
       summary: "Read the list of ships, optionally filtered by combinations of Name/IMO Number/Reporting Period"
       responses:
         "200":

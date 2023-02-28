@@ -7,7 +7,8 @@ from sqlalchemy import func
 from config import db
 
 
-def read_filtered(ship_name: Union[str, None], ship_imo: Union[str, None], year: Union[str, None]) -> ByteString:
+def read_filtered(ship_name: Union[str, None] = None, ship_imo: Union[str, None] = None,
+                  year: Union[int, None] = None) -> ByteString:
 
     # Handling different combinations of ship name and ship IMO
     if ship_name is not None and ship_imo is not None:
@@ -41,36 +42,36 @@ def read_filtered(ship_name: Union[str, None], ship_imo: Union[str, None], year:
     if ships is not None:
         return ships_schema.dump(ships)
     else:
-        abort(404, f"Data not found")
+        abort(404, f"Data not found")  # This isn't necessary - if data not found ships will gracefully be empty list
 
 
-def get_co2_by_ship_type(year: Union[str, None]) -> Dict:
+def get_co2_by_ship_type(year: Union[int, None]) -> Dict:
 
     if year is not None:
         response = db.session.query(Ship.ship_type, func.sum(Ship.total_co2_emissions))\
-            .filter(Ship.reporting_period == int(year)).group_by(Ship.ship_type).all()
+            .filter(Ship.reporting_period == year).group_by(Ship.ship_type).all()
     else:
         response = db.session.query(Ship.ship_type, func.sum(Ship.total_co2_emissions)).group_by(Ship.ship_type).all()
 
     return {response_tuple[0]: response_tuple[1] for response_tuple in response}
 
 
-def count_ship_types(year: Union[str, None]) -> Dict:
+def count_ship_types(year: Union[int, None]) -> Dict:
 
     if year is not None:
         response = db.session.query(Ship.ship_type, func.count(Ship.ship_type))\
-            .filter(Ship.reporting_period == int(year)).group_by(Ship.ship_type).all()
+            .filter(Ship.reporting_period == year).group_by(Ship.ship_type).all()
     else:
         response = db.session.query(Ship.ship_type, func.count(Ship.ship_type)).group_by(Ship.ship_type).all()
 
     return {response_tuple[0]: response_tuple[1] for response_tuple in response}
 
 
-def get_fuel_by_ship_type(year: Union[str, None]) -> Dict:
+def get_fuel_by_ship_type(year: Union[int, None]) -> Dict:
 
     if year is not None:
         response = db.session.query(Ship.ship_type, func.sum(Ship.total_fuel_consumption))\
-            .filter(Ship.reporting_period == int(year)).group_by(Ship.ship_type).all()
+            .filter(Ship.reporting_period == year).group_by(Ship.ship_type).all()
     else:
         response = db.session.query(Ship.ship_type, func.sum(Ship.total_fuel_consumption)).group_by(Ship.ship_type).all()
 
