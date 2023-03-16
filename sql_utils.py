@@ -1,8 +1,6 @@
 import pandas as pd
-from typing import Dict, List, Union
 import sqlite3
 from utils import original_dataset_fields
-from pandas_utils import clean_dataset
 
 
 def create_sqlite_database(df: pd.DataFrame) -> None:
