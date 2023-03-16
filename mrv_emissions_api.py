@@ -18,6 +18,7 @@ app = app.app
 # TODO: Pull the data from website directly?
 # TODO: Use pandas instead of dicts where possible
 
+# TODO: might be better to have a separate db setup script - better if we have multiple users and not deployed locally
 # Do some setup if a database isn't already set up
 if not os.path.exists('mrv_emissions.db'):
     print('...Loading MRV data into mrv_emissions.db...')
@@ -66,6 +67,7 @@ def fetch_ships() -> Union[Response, str]:
     else:
         year = None
 
+    # TODO: default behaviour is to return all ships, which is really slow - change this
     # Read filtered ship data
     ships = read_filtered(ship_name, ship_imo, year)
 
