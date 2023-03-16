@@ -84,17 +84,13 @@ def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
     df[number_cols] = df[number_cols].apply(pd.to_numeric, errors='coerce', axis=1)
 
     # Replacing any error values
-    df = df.replace('Not Applicable', np.NaN)
-    df = df.replace('N/A', np.NaN)
-    df = df.replace('NA', np.NaN)
-    df = df.replace('None', np.NaN)
-    df = df.replace('Division by zero!', np.NaN)
+    # TODO: errors='coerce' should take care of this automatically anyway - double check and delete below if so
+    for bad_value in ['Not Applicable', 'N/A', 'NA', 'None', 'Division by zero!']:
+        df = df.replace(bad_value, np.NaN)
 
     # Cleaning the date columns
-    df['DoC issue date'] = df['DoC issue date'].replace('DoC not issued', pd.NaT)
-    df['DoC expiry date'] = df['DoC expiry date'].replace('DoC not issued', pd.NaT)
-
-    df['DoC issue date'] = pd.to_datetime(df['DoC issue date'], format='%d/%m/%Y')
-    df['DoC expiry date'] = pd.to_datetime(df['DoC expiry date'], format='%d/%m/%Y')
+    for col in ['DoC issue date', 'DoC expiry date']:
+        df[col] = df[col].replace('DoC not issued', pd.NaT)
+        df[col] = pd.to_datetime(df[col], format='%d/%m/%Y')
 
     return df
